@@ -1,1 +1,0 @@
-# function is in ping.py

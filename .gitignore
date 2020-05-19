@@ -1,6 +1,9 @@
-# IDE and related ignore files / folders
+# IDE folders
 .vscode/
-.funcignore
+.vs/
+.idea/
+.idea_modules/
+atlassian-ide-plugin.xml
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -132,3 +135,6 @@ obj
 appsettings.json
 local.settings.json
 .python_packages
+
+# configuration in scropts
+scripts/*.json

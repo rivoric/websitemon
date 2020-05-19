@@ -2,6 +2,15 @@
   "scriptFile": "ping.py",
   "bindings": [
     {
+      "name": "config",
+      "type": "table",
+      "tableName": "configuration",
+      "partitionKey": "func_all",
+      "rowKey": "website",
+      "connection": "AzureWebJobsStorage",
+      "direction": "in"
+    },
+    {
       "authLevel": "anonymous",
       "type": "httpTrigger",
       "direction": "in",

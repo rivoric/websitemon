@@ -2,6 +2,15 @@
   "scriptFile": "__init__.py",
   "bindings": [
     {
+      "name": "config",
+      "type": "table",
+      "tableName": "configuration",
+      "partitionKey": "func_all",
+      "rowKey": "logon",
+      "connection": "AzureWebJobsStorage",
+      "direction": "in"
+    },
+    {
       "name": "mytimer",
       "type": "timerTrigger",
       "direction": "in",
