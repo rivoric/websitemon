@@ -5,7 +5,7 @@
       "name": "config",
       "type": "table",
       "tableName": "configuration",
-      "partitionKey": "func_all",
+      "partitionKey": "websitemon_func",
       "rowKey": "logon",
       "connection": "AzureWebJobsStorage",
       "direction": "in"

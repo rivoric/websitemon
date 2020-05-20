@@ -5,8 +5,8 @@
       "name": "config",
       "type": "table",
       "tableName": "configuration",
-      "partitionKey": "func_all",
-      "rowKey": "website",
+      "partitionKey": "websitemon_func",
+      "rowKey": "ping",
       "connection": "AzureWebJobsStorage",
       "direction": "in"
     },
