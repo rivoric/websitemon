@@ -7,4 +7,17 @@ This confirms not only is the function app running but also it can reach the web
 ## How it works
 
 Issue a get request to `/api/ping` (eg. https://websitemon.azurewebsites.net/api/ping)
-When called is will attempt to load the default page from the website and return the resulting status code.
+When called is will attempt to load the websiteUrl and return the resulting status code.
+
+## Configuration
+
+The function expects additional configuration to be set within the configuration table in the storage account.
+It should have an entity with the following:
+
+```json
+{
+    "PartitionKey": "websitemon_func",
+    "RowKey": "ping",
+    "websiteUrl": "https://example.com"
+}
+```

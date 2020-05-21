@@ -1,14 +1,12 @@
 {
-  "scriptFile": "ping.py",
+  "scriptFile": "alert_slack.py",
   "bindings": [
     {
-      "name": "req",
-      "type": "httpTrigger",
+      "name": "queue",
+      "type": "queueTrigger",
       "direction": "in",
-      "authLevel": "anonymous",
-      "methods": [
-        "get"
-      ]
+      "queueName": "alerts",
+      "connection": "AzureWebJobsStorage"
     },
     {
       "name": "config",
@@ -17,12 +15,7 @@
       "connection": "AzureWebJobsStorage",
       "tableName": "configuration",
       "partitionKey": "websitemon_func",
-      "rowKey": "ping"
-    },
-    {
-      "name": "$return",
-      "type": "http",
-      "direction": "out"
+      "rowKey": "alert_slack"
     }
   ]
 }

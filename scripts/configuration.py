@@ -24,7 +24,7 @@ import json
 import argparse
 from azure.cosmosdb.table.tableservice import TableService
 
-def update_tables(connection_string: str, configuration_files: list):
+def update_tables(connection_string: str, configuration_files: list) -> None:
     try:
         ts = TableService(connection_string=connection_string)
     except:

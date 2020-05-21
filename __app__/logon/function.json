@@ -1,20 +1,27 @@
 {
-  "scriptFile": "__init__.py",
+  "scriptFile": "logon.py",
   "bindings": [
-    {
-      "name": "config",
-      "type": "table",
-      "tableName": "configuration",
-      "partitionKey": "websitemon_func",
-      "rowKey": "logon",
-      "connection": "AzureWebJobsStorage",
-      "direction": "in"
-    },
     {
       "name": "mytimer",
       "type": "timerTrigger",
       "direction": "in",
       "schedule": "0 */15 * * * *"
+    },
+    {
+      "name": "config",
+      "type": "table",
+      "direction": "in",
+      "connection": "AzureWebJobsStorage",
+      "tableName": "configuration",
+      "partitionKey": "websitemon_func",
+      "rowKey": "logon"
+    },
+    {
+      "name": "message",
+      "type": "queue",
+      "direction": "out",
+      "queueName": "alerts",
+      "connection": "AzureWebJobsStorage"
     }
   ]
 }
