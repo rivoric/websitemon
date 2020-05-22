@@ -17,8 +17,12 @@ Deploy the ARM template to Azure to create the infrastructure
 [![Deploy To Azure](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Frivoric%2Fwebsitemon%2Fmaster%2Fazuredeploy.json)
 [![Visualize](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/visualizebutton.svg?sanitize=true)](http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2Frivoric%2Fwebsitemon%2Fmaster%2Fazuredeploy.json)
 
-Run the [scripts](scripts/readme.md) to complete installation
+Run the [scripts](scripts/readme.md) to complete configuration.
+
+The code can be deployed using VS Code.
 
 ## Configuration
 
-Each function 
+Each function gets its configuration from a storage table where the rowkey is the same as the function name.
+The readme for each function contains the configuration details.
+There is also a [configuration.json](scripts/configuration.json) sample file in which can be used configuration.py script

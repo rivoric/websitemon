@@ -83,7 +83,7 @@ else {
 if ($null -eq (Get-AzStorageTable -Context $context -Name $ConfigurationTableName -ErrorAction SilentlyContinue)) {
     # storage queue does not exist
     Write-Output "Creating storage table: $ConfigurationTableName"
-    New-AzStorageQueue -Context $context -Table $ConfigurationTableName
+    New-AzStorageTable -Context $context -Name $ConfigurationTableName
 }
 else {
     Write-Verbose "Storage table $ConfigurationTableName already exists"
@@ -109,6 +109,12 @@ if (!$as) {
     throw "No such function app (app service) $FunctionAppName in resource group $ResourceGroupName"
 }
 
+$ashash = @{}
+foreach ($appsetting in $as.SiteConfig.AppSettings) {
+    $ashash[$appsetting.Name] = $appsetting.Value
+}
+$updateappsettings = $false
+
 # function to check secret, compare with passed in value and update
 function SecretCheck {
     param(
@@ -119,7 +125,7 @@ function SecretCheck {
         [parameter (Mandatory=$true)]
         [string] $SecretValue,
         [parameter (Mandatory=$true)]
-        $WebApp,
+        [hashtable] $AppSettingsHash,
         [parameter (Mandatory=$true)]
         [string] $AppSettingName
     )
@@ -152,43 +158,33 @@ function SecretCheck {
         $secret = Set-AzKeyVaultSecret -VaultName $KeyVaultName -SecretName $SecretName -SecretValue $newsecret
     }
 
-    $webappsettings = Get-AzWebApp -Name $WebApp.Name -ResourceGroupName $WebApp.ResourceGroup
-    $appsettingvalue = ($webappsettings.SiteConfig.AppSettings | Where-Object { $_.Name -eq $AppSettingName }).Value
-    $updateappsettings = $false
     $secretreference = "@Microsoft.KeyVault(SecretUri=$($secret.Id))"
 
-    if (!$appsettingvalue) {
-        # app setting does not exist
-        Write-Output "Creating app setting $AppSettingName"
-        $updateappsettings = $true
-    }
-    else {
+    if ($AppSettingsHash.ContainsKey($AppSettingName)) {
         # ensure app setting 
-        if ($appsettingvalue -eq $secretreference) {
+        if ($AppSettingsHash[$AppSettingName] -eq $secretreference) {
             Write-Verbose "App setting $AppSettingName set correctly"
+            $AppSettingsHash[$AppSettingName] = $secretreference
+            $false
         }
         else {
             # update app setting key vault reference
             Write-Output "Updating app setting $AppSettingName"
-            $updateappsettings = $true
+            $true
         }
     }
-
-    if ($updateappsettings) {
-        # update the reference in the app setting
-        $newSettingsHash = @{}
-        foreach ($appsetting in $WebApp.SiteConfig.AppSettings) {
-            $newSettingsHash[$appsetting.Name] = $appsetting.Value
-        }
-        $newSettingsHash[$AppSettingName] = $secretreference
-        Set-AzWebApp -Name $WebApp.Name -ResourceGroupName $WebApp.ResourceGroup -AppSettings $newSettingsHash
+    else {
+        # app setting does not exist
+        Write-Output "Creating app setting $AppSettingName"
+        $AppSettingsHash[$AppSettingName] = $secretreference
+        $true
     }
 }
 
 if (!$LogonUsername) {
     $LogonUsername = Read-Host -Prompt 'Input the username to log on to the website with'
 }
-SecretCheck -KeyVaultName $kv.VaultName -SecretName $SecretNameUser -SecretValue $LogonUsername -WebApp $as -AppSettingName "LOGON_USERNAME"
+$updateappsettings = (SecretCheck -KeyVaultName $kv.VaultName -SecretName $SecretNameUser -SecretValue $LogonUsername -AppSettingsHash $ashash -AppSettingName "LOGON_USERNAME") -or $updateappsettings
 
 if (!$LogonPassword) {
     $plaintextpassword = Read-Host -Prompt 'Input the username to log on to the website with'
@@ -197,4 +193,10 @@ else {
     # decrypt password
     $plaintextpassword = ConvertFrom-SecureString -SecureString $LogonPassword -AsPlainText
 }
-SecretCheck -KeyVaultName $kv.VaultName -SecretName $SecretNamePass -SecretValue $plaintextpassword -WebApp $as -AppSettingName "LOGON_PASSWORD"
+$updateappsettings = (SecretCheck -KeyVaultName $kv.VaultName -SecretName $SecretNamePass -SecretValue $plaintextpassword -AppSettingsHash $ashash -AppSettingName "LOGON_PASSWORD") -or $updateappsettings
+
+if ($updateappsettings) {
+    # update the reference in the app setting
+    Write-Output "Updating App Settings"
+    Set-AzWebApp -Name $as.Name -ResourceGroupName $as.ResourceGroup -AppSettings $ashash
+}

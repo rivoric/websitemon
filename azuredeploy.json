@@ -122,32 +122,34 @@
             "properties": {
                 "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('app_service_plan_name'))]",
                 "httpsOnly": true,
-                "appSettings": [
-                    {
-                        "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
-                        "value": "[reference(concat('microsoft.insights/components/', variables('app_insights_name'))).InstrumentationKey]"
-                    },
-                    {
-                        "name": "FUNCTIONS_EXTENSION_VERSION",
-                        "value": "~2"
-                    },
-                    {
-                        "name": "FUNCTIONS_WORKER_RUNTIME",
-                        "value": "python"
-                    },
-                    {
-                        "name": "AzureWebJobsStorage",
-                        "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storage_account_name'), ';AccountKey=', listKeys(variables('storageAccountid'),'2019-06-01').keys[0].value)]"
-                    },
-                    {
-                        "name": "LOGON_USERNAME",
-                        "value": ""
-                    },
-                    {
-                        "name": "LOGON_PASSWORD",
-                        "value": ""
-                    }
-                ],
+                "siteConfig": {
+                    "appSettings": [
+                        {
+                            "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+                            "value": "[reference(concat('microsoft.insights/components/', variables('app_insights_name'))).InstrumentationKey]"
+                        },
+                        {
+                            "name": "FUNCTIONS_EXTENSION_VERSION",
+                            "value": "~2"
+                        },
+                        {
+                            "name": "FUNCTIONS_WORKER_RUNTIME",
+                            "value": "python"
+                        },
+                        {
+                            "name": "AzureWebJobsStorage",
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storage_account_name'), ';AccountKey=', listKeys(variables('storageAccountid'),'2019-06-01').keys[0].value)]"
+                        },
+                        {
+                            "name": "LOGON_USERNAME",
+                            "value": ""
+                        },
+                        {
+                            "name": "LOGON_PASSWORD",
+                            "value": ""
+                        }
+                    ]
+                },
                 "reserved": true
             }
         },
