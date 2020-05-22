@@ -1,0 +1,22 @@
+{
+    "configuration": [
+        {
+            "PartitionKey": "websitemon_func",
+            "RowKey": "ping",
+            "websiteUrl": "https://quackajack.wordpress.com/"
+        },
+        {
+            "PartitionKey": "websitemon_func",
+            "RowKey": "alert_slack",
+            "websiteUrl": "https://hooks.slack.com/services/abcd/efgh/12345678"
+
+        },
+        {
+            "PartitionKey": "websitemon_func",
+            "RowKey": "logon",
+            "websiteUrl": "https://example.com/signIn",
+            "usernameField": "Username",
+            "passwordField": "Password"
+        }
+    ]
+}

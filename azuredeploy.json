@@ -1,0 +1,227 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "monitorName": {
+            "type": "String",
+            "metadata": {
+                "description": "Globally unique name of the function app. All resource names are derived from this."
+            }
+        },
+        "adminKeyvaultObjectId": {
+            "type": "String",
+            "metadata": {
+                "description": "Admin object (AAD user or group) to be given full key vault permissions."
+            }
+        },
+        "storageAccountType": {
+            "type": "string",
+            "defaultValue": "Standard_LRS",
+            "allowedValues": [
+                "Standard_LRS",
+                "Standard_GRS",
+                "Standard_RAGRS"
+            ]
+        },
+        "storageAccountKind": {
+            "type": "string",
+            "defaultValue": "StorageV2",
+            "allowedValues": [
+                "Storage",
+                "StorageV2",
+                "BlobStorage"
+            ]
+        },
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "Location for all resources."
+            }
+        }
+    },
+    "variables": {
+        "app_insights_name": "[concat(parameters('monitorName'), '-ai')]",
+        "key_vault_name": "[concat(parameters('monitorname'), '-kv')]",
+        "storage_account_name": "[concat(replace(parameters('monitorname'),'-', ''), 'str')]",
+        "app_service_plan_name": "[concat(parameters('monitorName'), '-asp')]",
+        "storageAccountid": "[resourceId('Microsoft.Storage/storageAccounts', variables('storage_account_name'))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.insights/components",
+            "apiVersion": "2015-05-01",
+            "name": "[variables('app_insights_name')]",
+            "location": "[parameters('location')]",
+            "kind": "web",
+            "tags": {
+                "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/sites/', parameters('monitorName'))]": "Resource"
+            },
+            "properties": {
+                "Application_Type": "web",
+                "ApplicationId": "[variables('app_insights_name')]"
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2019-06-01",
+            "name": "[variables('storage_account_name')]",
+            "location": "[parameters('location')]",
+            "sku": {
+                "name": "[parameters('storageAccountType')]"
+            },
+            "kind": "[parameters('storageAccountKind')]",
+            "properties": {
+                "supportsHttpsTrafficOnly": true,
+                "encryption": {
+                    "services": {
+                        "file": {
+                            "keyType": "Account",
+                            "enabled": true
+                        },
+                        "blob": {
+                            "keyType": "Account",
+                            "enabled": true
+                        }
+                    },
+                    "keySource": "Microsoft.Storage"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "2018-02-01",
+            "name": "[variables('app_service_plan_name')]",
+            "location": "[parameters('location')]",
+            "sku": {
+                "name": "Y1",
+                "tier": "Dynamic",
+                "size": "Y1",
+                "family": "Y",
+                "capacity": 0
+            },
+            "kind": "functionapp",
+            "properties": {
+                "reserved": true
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2018-11-01",
+            "name": "[parameters('monitorName')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.insights/components', variables('app_insights_name'))]",
+                "[resourceId('Microsoft.Storage/storageAccounts', variables('storage_account_name'))]",
+                "[resourceId('Microsoft.Web/serverfarms', variables('app_service_plan_name'))]"
+            ],
+            "kind": "functionapp,linux",
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('app_service_plan_name'))]",
+                "httpsOnly": true,
+                "appSettings": [
+                    {
+                        "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+                        "value": "[reference(concat('microsoft.insights/components/', variables('app_insights_name'))).InstrumentationKey]"
+                    },
+                    {
+                        "name": "FUNCTIONS_EXTENSION_VERSION",
+                        "value": "~2"
+                    },
+                    {
+                        "name": "FUNCTIONS_WORKER_RUNTIME",
+                        "value": "python"
+                    },
+                    {
+                        "name": "AzureWebJobsStorage",
+                        "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storage_account_name'), ';AccountKey=', listKeys(variables('storageAccountid'),'2019-06-01').keys[0].value)]"
+                    },
+                    {
+                        "name": "LOGON_USERNAME",
+                        "value": ""
+                    },
+                    {
+                        "name": "LOGON_PASSWORD",
+                        "value": ""
+                    }
+                ],
+                "reserved": true
+            }
+        },
+        {
+            "type": "Microsoft.KeyVault/vaults",
+            "apiVersion": "2016-10-01",
+            "name": "[variables('key_vault_name')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('monitorName'))]"
+            ],
+            "properties": {
+                "sku": {
+                    "family": "A",
+                    "name": "Standard"
+                },
+                "tenantId": "[subscription().tenantId]",
+                "accessPolicies": [
+                    {
+                        "tenantId": "[subscription().tenantId]",
+                        "objectId": "[reference(parameters('monitorName'), '2018-11-01', 'Full').identity.principalId]",
+                        "permissions": {
+                            "secrets": [
+                                "get"
+                            ]
+                        }
+                    },
+                    {
+                        "tenantId": "[subscription().tenantId]",
+                        "objectId": "[parameters('adminKeyvaultObjectId')]",
+                        "permissions": {
+                            "keys": [
+                                "Get",
+                                "List",
+                                "Update",
+                                "Create",
+                                "Import",
+                                "Delete",
+                                "Recover",
+                                "Backup",
+                                "Restore"
+                            ],
+                            "secrets": [
+                                "Get",
+                                "List",
+                                "Set",
+                                "Delete",
+                                "Recover",
+                                "Backup",
+                                "Restore"
+                            ],
+                            "certificates": [
+                                "Get",
+                                "List",
+                                "Update",
+                                "Create",
+                                "Import",
+                                "Delete",
+                                "Recover",
+                                "ManageContacts",
+                                "ManageIssuers",
+                                "GetIssuers",
+                                "ListIssuers",
+                                "SetIssuers",
+                                "DeleteIssuers"
+                            ]
+                        }
+                    }
+                ],
+                "enabledForDeployment": false,
+                "enabledForDiskEncryption": false,
+                "enabledForTemplateDeployment": false,
+                "enableSoftDelete": true
+            }
+        }
+    ]
+}
