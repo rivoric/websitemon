@@ -1,5 +1,5 @@
 {
-  "scriptFile": "alert_slack.py",
+  "scriptFile": "alert_webhook.py",
   "bindings": [
     {
       "name": "queue",
@@ -15,7 +15,7 @@
       "connection": "AzureWebJobsStorage",
       "tableName": "configuration",
       "partitionKey": "websitemon_func",
-      "rowKey": "alert_slack"
+      "rowKey": "alert_webhook"
     }
   ]
 }

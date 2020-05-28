@@ -8,7 +8,7 @@ It does this by having the following timer functions
 There are also the following support functions
 
 * [ping](ping/readme.md) - does a simple get on a page (usually the homepage)
-* [alert_slack](alert_slack/readme.md) - responsible for sending any alert failures to a Slack channel
+* [alert_webhook](alert_webhook/readme.md) - responsible for sending any alert failures to any app that supports webhooks, like Slack or Microsoft Teams
 
 ## Getting started
 

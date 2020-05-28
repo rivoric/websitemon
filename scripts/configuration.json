@@ -7,7 +7,7 @@
         },
         {
             "PartitionKey": "websitemon_func",
-            "RowKey": "alert_slack",
+            "RowKey": "alert_webhook",
             "websiteUrl": "https://hooks.slack.com/services/abcd/efgh/12345678"
 
         },
